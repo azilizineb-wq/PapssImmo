@@ -1,17 +1,17 @@
 # =========================
-#  PapssImmo – version finale (avec sidebar + pages)
+#  PapssImmo – Version finale avec "Accueil"
 # =========================
+
 import streamlit as st
 import pandas as pd
-import numpy as np
 import folium
 from streamlit_folium import st_folium
 import plotly.express as px
 
 # ---------- CONFIG ----------
-st.set_page_config(page_title="PapssImmo Accueil", page_icon="🏡", layout="wide")
+st.set_page_config(page_title="PapssImmo", page_icon="🏡", layout="wide")
 
-# ---------- STYLE ----------
+# ---------- STYLES ----------
 st.markdown("""
 <style>
   #MainMenu, footer {visibility:hidden;}
@@ -22,17 +22,27 @@ st.markdown("""
   }
   .metric {border-radius:16px; padding:14px 16px; border:1px solid #eee; background:var(--secondaryBg,#fff);}
   .subtle {color:#6b7280}
+  /* --- remplace le titre du menu latéral --- */
+  [data-testid="stSidebarNav"]::before {
+      content: "Accueil";
+      margin-left: 20px;
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: 600;
+      position: relative;
+      top: 10px;
+  }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- EN-TÊTE ----------
+# ---------- HERO ----------
 st.markdown(
   "<div class='hero'><h2 style='margin:0'>🏡 PapssImmo</h2>"
   "<div>Trouvez votre ville idéale en Île-de-France selon vos priorités.</div></div>",
   unsafe_allow_html=True
 )
 
-# ---------- DONNÉES ----------
+# ---------- DONNÉES (démo) ----------
 data = [
     ["Asnières-sur-Seine", 6400, 9, 8, 7, 6, 8, 6, 20, 48.91, 2.28, "https://upload.wikimedia.org/wikipedia/commons/5/5b/Mairie_d%27Asni%C3%A8res-sur-Seine_02.jpg"],
     ["Boulogne-Billancourt", 8900, 10, 9, 8, 7, 9, 5, 15, 48.84, 2.24, "https://upload.wikimedia.org/wikipedia/commons/4/44/Boulogne-Billancourt_-_H%C3%B4tel_de_ville_1.jpg"],
@@ -60,8 +70,10 @@ def compute_scores(df: pd.DataFrame, surface: int, budget: int, tmax: int, w: di
     X = X[(X["Prix_total"] <= budget) & (X["Temps_Paris"] <= tmax)]
     if X.empty:
         return X
+
     X["Prix_norm"]  = (1 - _scale01(X["Prix_m2"])) * 10
     X["Bruit_norm"] = (10 - X["Bruit"]).clip(0, 10)
+
     denom = sum(w.values()) or 1.0
     X["Score"] = (
         X["Transports"]*w["trans"] + X["Écoles"]*w["ecole"] + X["Sécurité"]*w["sec"] +
@@ -69,6 +81,7 @@ def compute_scores(df: pd.DataFrame, surface: int, budget: int, tmax: int, w: di
         X["Bruit_norm"]*w["bruit"]
     ) / denom
     X["Score"] = X["Score"].round(2).clip(0, 10)
+
     return X.sort_values("Score", ascending=False)
 
 def radar_fig(row: pd.Series):
@@ -80,18 +93,19 @@ def radar_fig(row: pd.Series):
     fig.update_traces(fill="toself")
     return fig
 
-# ---------- BARRE LATÉRALE ----------
+# ---------- SIDEBAR ----------
 with st.sidebar:
     st.image("https://em-content.zobj.net/thumbs/160/apple/354/house-with-garden_1f3e1.png", width=60)
     st.markdown("### **PapssImmo**")
+
     st.markdown("---")
     st.caption("Profil & critères")
 
-    st.session_state.budget   = st.number_input("💰 Budget (€)", 200000, 1_500_000, 600_000, step=50_000)
-    st.session_state.surface  = st.number_input("📐 Surface (m²)", 40, 150, 80)
-    st.session_state.tmax     = st.slider("⏱️ Temps max vers Paris (min)", 10, 90, 45)
-    st.session_state.age_cpl  = st.slider("👫 Âge du couple", 25, 60, 32)
-    st.session_state.age_enf  = st.slider("👧👦 Âge des enfants", 0, 18, 5)
+    budget   = st.number_input("💰 Budget (€)", 200000, 1_500_000, 600_000, step=50_000)
+    surface  = st.number_input("📐 Surface (m²)", 40, 150, 80)
+    tmax     = st.slider("⏱️ Temps max vers Paris (min)", 10, 90, 45)
+    age_cpl  = st.slider("👫 Âge du couple", 25, 60, 32)
+    age_enf  = st.slider("👧👦 Âge des enfants", 0, 18, 5)
 
     st.markdown("##### Pondérations")
     w = {
@@ -103,23 +117,24 @@ with st.sidebar:
         "dyn":   st.slider("🔥 Dynamisme", 0.0, 1.0, 0.10),
         "bruit": st.slider("🔇 Sensibilité bruit", 0.0, 1.0, 0.05),
     }
-    # ajustements
-    if st.session_state.age_enf < 10:
+
+    if age_enf < 10:
         w["ecole"] += 0.10; w["sec"] += 0.05
-    elif 10 <= st.session_state.age_enf < 16:
+    elif 10 <= age_enf < 16:
         w["trans"] += 0.10; w["dyn"] += 0.05
-    if st.session_state.age_cpl < 35:
+    if age_cpl < 35:
         w["dyn"] += 0.10
-    elif st.session_state.age_cpl > 45:
+    elif age_cpl > 45:
         w["nat"] += 0.10; w["bruit"] += 0.05
 
-    st.session_state.w = w
-
-# ---------- PAGE D’ACCUEIL ----------
-st.title("Bienvenue 👋")
-st.write("Réglez vos critères dans la barre latérale puis explorez **Recommandations** ou **Carte**.")
-
-col1, col2, col3 = st.columns(3)
-col1.info("🎯 **Reco personnalisées**\n\nClassement des meilleures communes selon vos priorités.")
-col2.info("🗺️ **Carte interactive**\n\nVisualisez les résultats sur la carte d’Île-de-France.")
-col3.info("📤 **Export**\n\nTéléchargez vos résultats pour les partager.")
+# ---------- PAGE D'ACCUEIL ----------
+st.markdown("## Bienvenue 👋")
+st.write("Réglez vos critères dans la barre latérale puis allez dans **Recommandations** ou **Carte**.")
+c1, c2, c3 = st.columns(3)
+for col, title, txt in [
+    (c1, "🎯 Reco personnalisées", "Classement des meilleures communes selon VOS priorités."),
+    (c2, "🗺️ Carte interactive", "Visualisez les résultats sur la carte d’Île-de-France."),
+    (c3, "📤 Export", "Téléchargez vos résultats pour les partager."),
+]:
+    with col:
+        st.markdown(f'<div class="metric"><b>{title}</b><div class="subtle">{txt}</div></div>', unsafe_allow_html=True)

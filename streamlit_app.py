@@ -1,5 +1,5 @@
 # =========================
-#  PapssImmo – version propre (multi-pages)
+#  PapssImmo – version finale (avec sidebar + pages)
 # =========================
 import streamlit as st
 import pandas as pd
@@ -32,7 +32,7 @@ st.markdown(
   unsafe_allow_html=True
 )
 
-# ---------- DONNÉES (démo) ----------
+# ---------- DONNÉES ----------
 data = [
     ["Asnières-sur-Seine", 6400, 9, 8, 7, 6, 8, 6, 20, 48.91, 2.28, "https://upload.wikimedia.org/wikipedia/commons/5/5b/Mairie_d%27Asni%C3%A8res-sur-Seine_02.jpg"],
     ["Boulogne-Billancourt", 8900, 10, 9, 8, 7, 9, 5, 15, 48.84, 2.24, "https://upload.wikimedia.org/wikipedia/commons/4/44/Boulogne-Billancourt_-_H%C3%B4tel_de_ville_1.jpg"],
@@ -80,4 +80,46 @@ def radar_fig(row: pd.Series):
     fig.update_traces(fill="toself")
     return fig
 
-# ---------- PAGE D’ACCUEIL ----
+# ---------- BARRE LATÉRALE ----------
+with st.sidebar:
+    st.image("https://em-content.zobj.net/thumbs/160/apple/354/house-with-garden_1f3e1.png", width=60)
+    st.markdown("### **PapssImmo**")
+    st.markdown("---")
+    st.caption("Profil & critères")
+
+    st.session_state.budget   = st.number_input("💰 Budget (€)", 200000, 1_500_000, 600_000, step=50_000)
+    st.session_state.surface  = st.number_input("📐 Surface (m²)", 40, 150, 80)
+    st.session_state.tmax     = st.slider("⏱️ Temps max vers Paris (min)", 10, 90, 45)
+    st.session_state.age_cpl  = st.slider("👫 Âge du couple", 25, 60, 32)
+    st.session_state.age_enf  = st.slider("👧👦 Âge des enfants", 0, 18, 5)
+
+    st.markdown("##### Pondérations")
+    w = {
+        "trans": st.slider("🚇 Transports", 0.0, 1.0, 0.25),
+        "ecole": st.slider("🏫 Écoles", 0.0, 1.0, 0.20),
+        "sec":   st.slider("🛡️ Sécurité", 0.0, 1.0, 0.15),
+        "nat":   st.slider("🌳 Nature", 0.0, 1.0, 0.10),
+        "prix":  st.slider("💶 Prix abordable", 0.0, 1.0, 0.15),
+        "dyn":   st.slider("🔥 Dynamisme", 0.0, 1.0, 0.10),
+        "bruit": st.slider("🔇 Sensibilité bruit", 0.0, 1.0, 0.05),
+    }
+    # ajustements
+    if st.session_state.age_enf < 10:
+        w["ecole"] += 0.10; w["sec"] += 0.05
+    elif 10 <= st.session_state.age_enf < 16:
+        w["trans"] += 0.10; w["dyn"] += 0.05
+    if st.session_state.age_cpl < 35:
+        w["dyn"] += 0.10
+    elif st.session_state.age_cpl > 45:
+        w["nat"] += 0.10; w["bruit"] += 0.05
+
+    st.session_state.w = w
+
+# ---------- PAGE D’ACCUEIL ----------
+st.title("Bienvenue 👋")
+st.write("Réglez vos critères dans la barre latérale puis explorez **Recommandations** ou **Carte**.")
+
+col1, col2, col3 = st.columns(3)
+col1.info("🎯 **Reco personnalisées**\n\nClassement des meilleures communes selon vos priorités.")
+col2.info("🗺️ **Carte interactive**\n\nVisualisez les résultats sur la carte d’Île-de-France.")
+col3.info("📤 **Export**\n\nTéléchargez vos résultats pour les partager.")

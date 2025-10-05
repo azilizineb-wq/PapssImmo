@@ -9,7 +9,7 @@ from streamlit_folium import st_folium
 import plotly.express as px
 
 # ---------- CONFIG ----------
-st.set_page_config(page_title="PapssImmo", page_icon="🏡", layout="wide")
+st.set_page_config(page_title="PapssImmo Accueil"", page_icon="🏡", layout="wide")
 
 # ---------- STYLE ----------
 st.markdown("""

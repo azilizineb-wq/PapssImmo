@@ -87,10 +87,27 @@ def radar_fig(row: pd.Series):
     return fig
 
 # ---------- SIDEBAR ----------
-with st.sidebar:
-    st.image("https://em-content.zobj.net/thumbs/160/apple/354/house-with-garden_1f3e1.png", width=60)
-    st.markdown("### **PapssImmo**")
-    page = st.radio("Navigation", ["Accueil", "Recommandations", "Carte", "À propos"], label_visibility="collapsed")
+st.set_page_config(
+    page_title="PapssImmo",
+    page_icon="🏡",
+    layout="wide"
+)
+
+st.markdown("""
+<div class='hero' style='background:linear-gradient(90deg,rgba(14,165,233,.15),rgba(16,185,129,.10));
+border-radius:12px;padding:18px 20px;margin-bottom:16px;'>
+<h2>🏡 PapssImmo</h2>
+<p>Trouvez votre ville idéale en Île-de-France selon vos priorités.</p>
+</div>
+""", unsafe_allow_html=True)
+
+st.title("Bienvenue 👋")
+st.write("Réglez vos critères dans la barre latérale puis explorez **Recommandations** ou **Carte**.")
+
+col1, col2, col3 = st.columns(3)
+col1.info("🎯 **Reco personnalisées**\n\nClassement des meilleures communes selon vos priorités.")
+col2.info("🗺️ **Carte interactive**\n\nVisualisez les résultats sur la carte d’Île-de-France.")
+col3.info("📤 **Export**\n\nTéléchargez vos résultats pour les partager.")
 
     st.markdown("---")
     st.caption("Profil & critères")

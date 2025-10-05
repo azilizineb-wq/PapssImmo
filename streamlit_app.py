@@ -8,18 +8,23 @@ from io import StringIO
 # ====== CONFIG GLOBALE ======
 st.set_page_config(page_title="PapssImmo", page_icon="🏡", layout="wide")
 
-# (facultatif) cacher le menu/habillage streamlit pour faire plus "app"
-HIDE_STREAMLIT_STYLE = """
-    <style>
-      #MainMenu {visibility: hidden;}
-      footer {visibility: hidden;}
-      .block-container{padding-top:1.5rem; padding-bottom:2rem; max-width:1200px;}
-      .metric {border-radius:16px; padding:14px 16px; border:1px solid #eee; background:#fff;}
-      .card {border-radius:18px; padding:16px; border:1px solid #eee; background:#fff;}
-      .subtle {color:#6b7280}
-    </style>
-"""
-st.markdown(HIDE_STREAMLIT_STYLE, unsafe_allow_html=True)
+# --- HEADER & STYLES ---
+st.markdown("""
+<style>
+  #MainMenu, footer {visibility:hidden;}
+  .block-container {max-width: 1180px; padding-top: 1.2rem;}
+  .hero {
+    background: linear-gradient(90deg, rgba(14,165,233,.15), rgba(16,185,129,.10));
+    border: 1px solid #e5e7eb; border-radius: 18px; padding: 18px 20px; margin-bottom: 14px;
+  }
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown(
+  "<div class='hero'><h2 style='margin:0'>🏡 PapssImmo</h2>"
+  "<div>Trouvez votre ville idéale en Île-de-France selon vos priorités.</div></div>",
+  unsafe_allow_html=True
+)
 
 # ====== DONNÉES (démo) ======
 data = [
